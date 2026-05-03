@@ -484,11 +484,59 @@
             70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
             100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
         }
+
+        /* Light Bulb Animation */
+        .bulb-container {
+            position: fixed;
+            top: 15%;
+            right: 10%;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            pointer-events: none;
+            transition: transform 0.1s ease-out;
+        }
+
+        .bulb-glow {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(249, 217, 118, 0.4) 0%, rgba(212, 175, 55, 0.1) 40%, rgba(212, 175, 55, 0) 70%);
+            border-radius: 50%;
+            animation: bulb-pulse 3s ease-in-out infinite;
+            filter: blur(20px);
+        }
+
+        .bulb-icon {
+            color: var(--bright-gold);
+            filter: drop-shadow(0 0 30px rgba(249, 217, 118, 1));
+            z-index: 2;
+        }
+
+        @keyframes bulb-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.4); opacity: 1; }
+        }
+
+        @media (max-width: 992px) {
+            .bulb-container {
+                width: 120px;
+                height: 120px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <canvas id="particle-bg"></canvas>
+
+    <div class="bulb-container" id="flying-bulb">
+        <div class="bulb-glow"></div>
+        <i data-lucide="lightbulb" class="bulb-icon" size="80"></i>
+    </div>
 
     <nav id="navbar">
         <div class="container">
@@ -670,15 +718,21 @@
                 </div>
                 <div class="contact-form reveal">
                     <div class="form-group">
-                        <input type="text" placeholder="Your Name">
+                        <input type="text" id="contact-name" placeholder="Your Name">
                     </div>
                     <div class="form-group">
-                        <input type="email" placeholder="Your Email">
+                        <input type="email" id="contact-email" placeholder="Your Email">
                     </div>
                     <div class="form-group">
-                        <textarea rows="5" placeholder="Project Details"></textarea>
+                        <input type="text" id="contact-whatsapp" placeholder="WhatsApp Number">
                     </div>
-                    <a href="https://wa.me/201068741071" class="btn btn-gold" style="width: 100%; justify-content: center;">Send Message</a>
+                    <div class="form-group">
+                        <input type="text" id="contact-social" placeholder="Facebook/Instagram Profile Link">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="contact-project" rows="5" placeholder="Project Details"></textarea>
+                    </div>
+                    <button id="send-message" class="btn btn-gold" style="width: 100%; justify-content: center;">Send Message</button>
                 </div>
             </div>
         </div>
@@ -793,6 +847,59 @@
         }, { threshold: 0.1 });
 
         revealElements.forEach(el => revealObserver.observe(el));
+
+        // WhatsApp Form Submission
+        document.getElementById('send-message').addEventListener('click', () => {
+            const name = document.getElementById('contact-name').value;
+            const email = document.getElementById('contact-email').value;
+            const whatsapp = document.getElementById('contact-whatsapp').value;
+            const social = document.getElementById('contact-social').value;
+            const project = document.getElementById('contact-project').value;
+
+            if (!name || !project) {
+                alert('Please fill in at least your name and project details.');
+                return;
+            }
+
+            const message = `Name: ${name}%0AEmail: ${email}%0AWhatsApp: ${whatsapp}%0ASocial: ${social}%0AProject: ${project}`;
+            const whatsappUrl = `https://wa.me/201068741071?text=${message}`;
+            
+            window.open(whatsappUrl, '_blank');
+        });
+
+        // Flying Bulb Scroll Logic
+        const flyingBulb = document.getElementById('flying-bulb');
+        window.addEventListener('scroll', () => {
+            const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+            
+            // Complex path for the bulb
+            const x = Math.sin(scrollPercent * Math.PI * 2) * 40 - (scrollPercent * 60); // Moves left/right/diagonal
+            const y = Math.cos(scrollPercent * Math.PI * 3) * 20 + (scrollPercent * 30); // Moves up/down
+            
+            // Adding a float effect on top of scroll position
+            const floatX = Math.sin(Date.now() / 1000) * 10;
+            const floatY = Math.cos(Date.now() / 1000) * 10;
+
+            flyingBulb.style.transform = `translate(${x}vw, ${y}vh) rotate(${scrollPercent * 360}deg)`;
+        });
+
+        // Continuous float animation for the bulb even when not scrolling
+        function animateBulb() {
+            const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+            const time = Date.now() / 2000;
+            
+            // Base position from scroll
+            const baseX = Math.sin(scrollPercent * Math.PI * 2.5) * 35 - (scrollPercent * 50);
+            const baseY = Math.cos(scrollPercent * Math.PI * 2) * 15 + (scrollPercent * 10);
+            
+            // Micro-float
+            const floatX = Math.sin(time) * 15;
+            const floatY = Math.cos(time * 0.8) * 15;
+
+            flyingBulb.style.transform = `translate(${baseX + (floatX / 10)}vw, ${baseY + (floatY / 10)}vh) rotate(${scrollPercent * 180 + floatX}deg)`;
+            requestAnimationFrame(animateBulb);
+        }
+        animateBulb();
     </script>
 </body>
 </html>
